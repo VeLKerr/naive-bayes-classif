@@ -1,11 +1,13 @@
 package com.naivebayesclassifier;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
+import com.mchange.v2.c3p0.DataSources;
 import java.beans.PropertyVetoException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.sql.DataSource;
 
 /**
  * Класс, описывающий свойства соединения с базой.
@@ -18,15 +20,21 @@ public class ConnectionProperties {
     public static final String US_NAME = "VeLKerr";
     public static final ComboPooledDataSource cpds = new ComboPooledDataSource();
     
+    private static abstract class PoolData{
+        private static final int MAX_POOL_SIZE = 100;
+        private static final int MAX_STATEMENTS = 10;
+    }
+    
     static {
         try {
+//            DataSource unpooled = DataSources.unpooledDataSource(NAME, US_NAME, US_PASS);
             cpds.setDriverClass(DRIVER_CLASS);
             cpds.setJdbcUrl(NAME);
             cpds.setUser(US_NAME);
             cpds.setPassword(US_PASS);
-            cpds.setMaxStatements(10); //размер кэша, куда записываются использованные PrearedStatement'ы с целью
+            cpds.setMaxStatements(PoolData.MAX_STATEMENTS); //размер кэша, куда записываются использованные PrearedStatement'ы с целью
             //увеличения быстродействия при их повторном вызове. (Процедура stmt.close() осуществляет кеширование)
-            cpds.setMaxPoolSize(100);
+            cpds.setMaxPoolSize(PoolData.MAX_POOL_SIZE);
         } catch (PropertyVetoException ex) {
             Logger.getLogger(ConnectionProperties.class.getName()).log(Level.SEVERE, 
                     "The proposed change to a property represents an unacceptable value", ex);
