@@ -30,7 +30,7 @@ public class GeneralOperations {
             stmt.executeUpdate(deleteAll + rs.getString(2));
         }
         rs.close();
-//        stmt.close();
+        stmt.close();
         conn.close();
     }
     

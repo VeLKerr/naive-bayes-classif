@@ -8,7 +8,6 @@ import java.sql.Statement;
 import java.util.List;
 import com.naivebayesclassifier.ConnectionProperties;
 import com.naivebayesclassifier.ParameterQueryBuilder;
-import oracle.jdbc.driver.T4CXAConnection;
 
 /**
  * Класс, описывающий методы доступа к таблице слов в обучающей выборке
