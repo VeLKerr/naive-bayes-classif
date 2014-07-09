@@ -76,6 +76,19 @@ public class Main {
         }
         return number;
     }
+    
+    private static void testing() throws ClassNotFoundException, SQLException, IOException{
+        GeneralOperations.deleteAll();
+        MessageCounts.createMessageTypes();
+        TextPreprocessing tp = new TextPreprocessing();
+        for(int i=1; i<PART_NUMBER; i++){
+            tp.addLearningNumber(i);
+            tp.writeToDB();
+            for(int j=1; j<PART_NUMBER; j++){
+                
+            }
+        }
+    }
 
     /**
      * @param args the command line arguments
@@ -88,10 +101,11 @@ public class Main {
         int mode = inputNumber(1, 2);
         System.out.print("Input number of folder which remains for classification: ");
         testingDataSetNumber = inputNumber(1, PART_NUMBER);
-        tp = new TextPreprocessing(testingDataSetNumber); 
+        tp = new TextPreprocessing();
+        tp.addTestingNumber(testingDataSetNumber);
         if(mode == 1){
             GeneralOperations.deleteAll(); //удаление данных прошлого сеанса обучения.
-            //(это делается для того, чтобы исключить ошибку нарушения уникальности слов в базе.
+            //(Это делается для того, чтобы исключить ошибку нарушения уникальности слов в базе.
             //Такая ошибка возможна т.к. обучение происходит на тех же 10-и папках набора bare).
             MessageCounts.createMessageTypes();
             tp.writeToDB();
