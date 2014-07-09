@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import static com.naivebayesclassifier.Main.PART_NUMBER;
+import java.util.AbstractList;
 
 /**
  * Класс, отвечающий за предобработку текста, разбиение его на слова, а также
@@ -26,10 +27,22 @@ public class TextPreprocessing {
     /**
      * Номер папки с тестировочным набором сообщений.
      */
-    private final int testingDataSetNumber;
+    //private final int testingDataSetNumber;
+    private final List<Integer> testingDataSetNumbers;
+    private final List<Integer> learningDataSetNumbers;
 
-    public TextPreprocessing(int testingDataSetNumber) {
-        this.testingDataSetNumber = testingDataSetNumber;
+    public TextPreprocessing() {
+//        this.testingDataSetNumber = testingDataSetNumber;
+        this.testingDataSetNumbers = new ArrayList<>();
+        this.learningDataSetNumbers = new ArrayList<>();
+    }
+    
+    public void addTestingNumber(int number){
+        testingDataSetNumbers.add(number);
+    }
+    
+    public void addLearningNumber(int number){
+        learningDataSetNumbers.add(number);
     }
     
     /**
@@ -41,7 +54,7 @@ public class TextPreprocessing {
     public void writeToDB() throws IOException, SQLException, ClassNotFoundException{
         File dir = null;
         for(int i=1; i<=PART_NUMBER; i++){
-            if(i != testingDataSetNumber){
+            if(learningDataSetNumbers.contains(i)){
                 dir = new File(Main.buildPath(i));
                 for(String fname: dir.list()){
                     boolean isSpam = fname.contains(Main.SPAM_FILE_FEATURE);
