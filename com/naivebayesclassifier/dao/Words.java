@@ -90,8 +90,8 @@ public class Words{
             }
             ps.executeUpdate();
             rs.close();
+            ps.close();
         }
-        ps.close();
         conn.close();
     }
     
