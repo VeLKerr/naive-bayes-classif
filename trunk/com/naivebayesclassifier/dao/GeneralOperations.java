@@ -23,13 +23,11 @@ public class GeneralOperations {
      */
     public static void deleteAll() throws SQLException, ClassNotFoundException{
         Connection conn = ConnectionProperties.createConnection();
-        conn.setAutoCommit(true);
         Statement stmt = conn.createStatement();
         stmt.executeQuery(getAllTableNames);
         ResultSet rs = stmt.getResultSet();
         while(rs.next()){
-            System.out.println(rs.getString(2));
-            stmt.executeUpdate(deleteAll + rs.getString(2));
+            conn.createStatement().executeUpdate(deleteAll + rs.getString(2));
         }
         rs.close();
         stmt.close();

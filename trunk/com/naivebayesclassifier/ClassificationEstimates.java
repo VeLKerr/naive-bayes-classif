@@ -71,10 +71,10 @@ public class ClassificationEstimates {
         double hamHam = ClassifiedMessages.count(conn, false, false);
         double sysSpam = ClassifiedMessages.count(conn, false, true);
         double sysHam = ClassifiedMessages.count(conn, true, false);
-        estimates.add(nanToZero(spamSpam / (spamSpam + sysSpam)));
-        estimates.add(nanToZero(spamSpam / (spamSpam + sysHam)));
-        estimates.add(nanToZero(hamHam / (hamHam + sysHam)));
-        estimates.add(nanToZero(hamHam / (hamHam + sysSpam)));
+        estimates.add(Utils.nanToZero(spamSpam / (spamSpam + sysSpam)));
+        estimates.add(Utils.nanToZero(spamSpam / (spamSpam + sysHam)));
+        estimates.add(Utils.nanToZero(hamHam / (hamHam + sysHam)));
+        estimates.add(Utils.nanToZero(hamHam / (hamHam + sysSpam)));
         return estimates;
     }
     
@@ -106,18 +106,4 @@ public class ClassificationEstimates {
         return (powBeta + 1) * precision * recall / (powBeta * precision + recall);
     }
     
-    /**
-     * В некоторых случаях, при вычислениях точности и полноты, возникает
-     * значение NaN (Например, если ни одного сообщения во время тестирования
-     * не было отнесено к классу SPAM). На самом деле, этот результат можно
-     * интерпретировать как 0. Данный метод заменяет NaN на 0.
-     * @param value число, которое проверяется на NaN
-     * @return заменённое (если необходимо) число.
-     */
-    private double nanToZero(double value){
-        if(value == Double.NaN){
-            return 0.0;
-        }
-        return value;
-    }
 }

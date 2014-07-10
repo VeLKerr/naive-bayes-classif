@@ -10,8 +10,10 @@ import com.naivebayesclassifier.dao.ClassifiedMessages;
 import com.naivebayesclassifier.dao.GeneralOperations;
 import com.naivebayesclassifier.dao.MessageCounts;
 import com.naivebayesclassifier.dao.Words;
+import com.naivebayesclassifier.reports.ExcelView;
 import com.naivebayesclassifier.reports.MetricMatrixes;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * <b><font color="red">Главный класс программы</font></b>
@@ -19,7 +21,7 @@ import java.util.ArrayList;
  */
 public class Main {
     //кол-во папок с сообщениями
-    public static final int PART_NUMBER = getPartNumber(); 
+    public static final int PART_NUMBER = 3;
     //путь к папкам с сообщениями
     public static final String PATH_TO_FILES = "lingspam_public\\bare\\"; 
     
@@ -46,7 +48,7 @@ public class Main {
      * @return строка относительного пути.
      */
     public static String buildPath(int partNumber) {
-        if (partNumber > 0 && partNumber < 11) {
+        if (partNumber > 0 && partNumber <= PART_NUMBER) {
             return PATH_TO_FILES + "part" + partNumber + "\\";
         } else {
             System.err.println("Incorrect number of the part!");
@@ -83,11 +85,16 @@ public class Main {
         MessageCounts.createMessageTypes();
         TextPreprocessing tp = new TextPreprocessing();
         MetricMatrixes mm = new MetricMatrixes();
+        ClassificationEstimates cest = new ClassificationEstimates();
         
+//        tp.addLearningNumber(1);
+//        tp.writeToDB();
         for(int i=1; i<PART_NUMBER; i++){
-            ClassificationEstimates cest = new ClassificationEstimates();
             tp.addLearningNumber(i);
-            tp.writeToDB();
+            tp.writeToDB(i);
+//            if(i != 1){
+//                tp.addLearningNumber(i);
+//            }
             for(int j=1; j<PART_NUMBER; j++){
                 if(!tp.getLearningNumbers().contains(j)){
                     File dir = new File(buildPath(j));
@@ -96,13 +103,17 @@ public class Main {
                         List<String> words = tp.prepareToClassifyFile(dir, fname);
                         NaiveBayes nb = new NaiveBayes(words);
                         boolean isSpam = nb.isSpam();
+                        System.err.println("Tested " + fname + " (" + j + ")");
+                        ClassifiedMessages.add(fname, isSpam);
                         //Words.addAll(words, isSpam); //после классификации системой сообщения,
-                        //происходит её дообучение на нём.
+                        //происходит её дообучение на нём. !!! ORA-01000: maximum open cursors exceeded (cursors = 1000).
                     }
                     mm.setAllMetrics(cest, i, j);
                 }
             }
+            GeneralOperations.deleteAll("CLASSIFIEDMESSAGES");
         }
+        ExcelView.generateReport(mm);
     }
 
     /**
@@ -110,7 +121,7 @@ public class Main {
      * @throws java.io.IOException
      */
     public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
-        //GeneralOperations.deleteAll();
+        GeneralOperations.deleteAll();
         testing();
         
 //        TextPreprocessing tp = null;

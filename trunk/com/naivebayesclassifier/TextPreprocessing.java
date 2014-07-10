@@ -72,8 +72,35 @@ public class TextPreprocessing {
                     } catch (FileNotFoundException ex) {
                         Logger.getLogger(TextPreprocessing.class.getName()).log(Level.SEVERE, "File not found!", ex);
                     }
-                    System.err.println("!!!!!!!" + fname);
+                    System.err.println("Trained on " + fname);
                 }
+            }
+        }
+    }
+    
+    /**
+     * Запись тренировочной выборки в БД.
+     * @param learningDataSetNumber номер каталога с сообщениями для обучения.
+     * @throws IOException при ошибке чтения текста из файла с сообщением.
+     * @throws ClassNotFoundException при ошибке нахождения JDBC-драйвера.
+     * @throws SQLException при ошибке выполнения запроса.
+     */
+    public void writeToDB(int learningDataSetNumber) throws IOException, SQLException, ClassNotFoundException{
+        if(learningDataSetNumbers.contains(learningDataSetNumber)){
+            File dir = new File(Main.buildPath(learningDataSetNumber));
+            for(String fname: dir.list()){
+                boolean isSpam = fname.contains(Main.SPAM_FILE_FEATURE);
+                MessageCounts.incrementCounter(isSpam);
+                try {
+                    BufferedReader br = new BufferedReader(new FileReader(new File(dir, fname)));
+                    String line = null;
+                    while((line = br.readLine()) != null){
+                        toDB(preprocess(line), isSpam);
+                    }
+                } catch (FileNotFoundException ex) {
+                    Logger.getLogger(TextPreprocessing.class.getName()).log(Level.SEVERE, "File not found!", ex);
+                }
+                System.err.println("Trained on " + fname);
             }
         }
     }
