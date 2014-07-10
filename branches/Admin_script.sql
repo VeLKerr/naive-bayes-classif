@@ -1,15 +1,23 @@
-/*Операции, которые желательно выполнять только зайдя в систему как SYSDBA*/
+п»ї/*РћРїРµСЂР°С†РёРё, РєРѕС‚РѕСЂС‹Рµ Р¶РµР»Р°С‚РµР»СЊРЅРѕ РІС‹РїРѕР»РЅСЏС‚СЊ С‚РѕР»СЊРєРѕ Р·Р°Р№РґСЏ РІ СЃРёСЃС‚РµРјСѓ РєР°Рє SYSDBA*/
 
--- Увеличение допустимого кол-ва транзакций, сеансов и процессов в Oracle DataBase. При чём: 
-Alter System Set Processes=500 Scope=Spfile Sid='*'; -- если обозначим Processes = X, то: 
-Alter System Set Sessions=555 Scope=Spfile Sid='*'; -- Sessions = Y = [1,1 *Х] + 6;
-alter system set transactions=611 scope=Spfile sid='*'; -- Transactions = [Y] + 1.
+-- РЈРІРµР»РёС‡РµРЅРёРµ РґРѕРїСѓСЃС‚РёРјРѕРіРѕ РєРѕР»-РІР° С‚СЂР°РЅР·Р°РєС†РёР№, СЃРµР°РЅСЃРѕРІ Рё РїСЂРѕС†РµСЃСЃРѕРІ РІ Oracle DataBase. РџСЂРё С‡С‘Рј: 
+Alter System Set Processes=500 Scope=Spfile Sid='*'; -- РµСЃР»Рё РѕР±РѕР·РЅР°С‡РёРј Processes = X, С‚Рѕ: 
+Alter System Set Sessions=555 Scope=Spfile Sid='*'; -- Sessions = Y = [1,1 *РҐ] + 6;
+Alter System Set Transactions=611 Scope=Spfile Sid='*'; -- Transactions = [Y] + 1.
+-- РЈРІРµР»РёС‡РµРЅРёРµ РјР°РєСЃРёРјР°Р»СЊРЅРѕРіРѕ РґРѕРїСѓСЃС‚РёРјРѕРіРѕ РєРѕР»-РІР° РѕС‚РєСЂС‹С‚С‹С… РєСѓСЂСЃРѕСЂРѕРІ (РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ РѕС‚РєСЂС‹С‚С‹С… РєСѓСЂСЃРѕСЂРѕРІ РІ Oracle Express 10g 300)
+alter system set open_cursors=1000 scope=Spfile Sid='*';
 
 alter system set transactions_per_rollback_segment=6 scope=Spfile sid='*';
 
-Select Count(*) From V$session; -- посмотреть кол-во открытых сеансов.
+Select Count(*) From V$session; -- РїРѕСЃРјРѕС‚СЂРµС‚СЊ РєРѕР»-РІРѕ РѕС‚РєСЂС‹С‚С‹С… СЃРµР°РЅСЃРѕРІ.
 
--- Вывести допустимое кол-во транзакций, сеансов и процессов в Oracle DataBase.
+-- Р’С‹РІРµСЃС‚Рё РґРѕРїСѓСЃС‚РёРјРѕРµ РєРѕР»-РІРѕ С‚СЂР°РЅР·Р°РєС†РёР№, СЃРµР°РЅСЃРѕРІ Рё РїСЂРѕС†РµСЃСЃРѕРІ РІ Oracle DataBase.
 Show Parameter Sessions;
 Show Parameter Processes;
-show parameter transactions;
+Show Parameter Transactions;
+-- Р’С‹РІРµСЃС‚Рё РјР°РєСЃРёРјР°Р»СЊРЅРѕРµ РґРѕРїСѓСЃС‚РёРјРѕРµ РєРѕР»-РІРѕ РѕС‚РєСЂС‹С‚С‹С… РєСѓСЂСЃРѕСЂРѕРІ
+Show Parameter open_cursors; 
+
+Select * 
+From All_Tables
+Where tablespace_name like 'USERS' AND Owner like 'VELKERR';
