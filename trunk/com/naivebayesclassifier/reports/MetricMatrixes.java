@@ -6,7 +6,9 @@
 
 package com.naivebayesclassifier.reports;
 
+import com.naivebayesclassifier.ClassificationEstimates;
 import static com.naivebayesclassifier.Main.PART_NUMBER;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +19,7 @@ import java.util.List;
  * @author Kirius VeLKerr (Ivchenko Oleg)
  */
 public class MetricMatrixes {
+    private static final int BETA = 1;
     /**
      * Матрица точностей.
      */
@@ -161,5 +164,25 @@ public class MetricMatrixes {
      */
     public double[][] getFMeasure(boolean isSpam){
         return fMeasure.get(booleanToInteger(isSpam));
+    }
+    
+    /**
+     * Установка всех метрик для данного цикла тестирования.
+     * @param cest метрики.
+     * @param learningAmt кол-во каталогов, на которых система обучалась.
+     * @param testingAmt кол-во каталогов, на которых производилось тестирование.
+     * @throws ClassNotFoundException при ошибке нахождения JDBC-драйвера
+     * @throws SQLException при ошибке выполнения запроса.
+     */
+    public void setAllMetrics(ClassificationEstimates cest, int learningAmt, int testingAmt) throws SQLException, ClassNotFoundException{
+        accuracy[learningAmt - 1][testingAmt - 1] = cest.computeAccuracy();
+        List<Double> estimates = cest.computeEstimates();
+        precision.get(1)[learningAmt - 1][testingAmt - 1] = estimates.get(0);
+        recall.get(1)[learningAmt - 1][testingAmt - 1] = estimates.get(1);
+        precision.get(0)[learningAmt - 1][testingAmt - 1] = estimates.get(2);
+        recall.get(0)[learningAmt - 1][testingAmt - 1] = estimates.get(3);
+        List<Double> measures = cest.computeFMeasure(estimates, BETA);
+        fMeasure.get(1)[learningAmt - 1][testingAmt - 1] = measures.get(0);
+        fMeasure.get(0)[learningAmt - 1][testingAmt - 1] = measures.get(1);
     }
 }

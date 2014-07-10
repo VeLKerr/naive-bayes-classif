@@ -12,10 +12,21 @@ import java.util.List;
  * @author Kirius VeLKerr (Ivchenko Oleg)
  */
 public class ClassificationEstimates {
-    private final int testingDataSetNumber; //Номер папки набором сообщений, предназначенных для тестировки.
+    private final List<Integer> testingDataSetNumbers; //Номера директорий с сообщенями, предназначенными для тестировки.
 
-    public ClassificationEstimates(int testingDataSetNumber) {
-        this.testingDataSetNumber = testingDataSetNumber;
+//    public ClassificationEstimates(int testingDataSetNumber) {
+//        this.testingDataSetNumber = testingDataSetNumber;
+//    }
+    public ClassificationEstimates(List<Integer> testingDataSetNumbers) {
+        this.testingDataSetNumbers = testingDataSetNumbers;
+    }
+
+    public ClassificationEstimates() {
+        this.testingDataSetNumbers = new ArrayList<>();
+    }
+    
+    public void addTestingNumber(int number){
+        testingDataSetNumbers.add(number);
     }
     
     /**
@@ -23,7 +34,12 @@ public class ClassificationEstimates {
      * @return кол-во сообщений тестировчного набора.
      */
     private int getRetrievedFilesCount(){
-        return new File(Main.buildPath(testingDataSetNumber)).list().length;
+        int cnt = 0;
+        File file = null;
+        for(int testingDataSetNumber: testingDataSetNumbers){
+            cnt += new File(Main.buildPath(testingDataSetNumber)).list().length;
+        }
+        return cnt;
     }
     
     /**

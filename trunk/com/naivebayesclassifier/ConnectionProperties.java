@@ -70,7 +70,9 @@ public class ConnectionProperties {
 //         return DriverManager.getConnection(DRIVER_URL, US_NAME, US_PASS);
 //        return cpds.getConnection();
 //        return pooled.getConnection();
-        return DATA_SOURCE.getConnection();
+        Connection conn = DATA_SOURCE.getConnection();
+        conn.setAutoCommit(true);
+        return conn;
     }
     
     public void closePool() throws SQLException{

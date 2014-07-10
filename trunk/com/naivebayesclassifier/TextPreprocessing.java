@@ -45,6 +45,10 @@ public class TextPreprocessing {
         learningDataSetNumbers.add(number);
     }
     
+    public List<Integer> getLearningNumbers(){
+        return learningDataSetNumbers;
+    }
+    
     /**
      * Запись тренировочной выборки в БД.
      * @throws IOException при ошибке чтения текста из файла с сообщением.
