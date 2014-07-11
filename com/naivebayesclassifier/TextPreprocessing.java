@@ -16,7 +16,6 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import static com.naivebayesclassifier.Main.PART_NUMBER;
-import java.util.AbstractList;
 
 /**
  * Класс, отвечающий за предобработку текста, разбиение его на слова, а также
@@ -162,7 +161,7 @@ public class TextPreprocessing {
                 Words.add(w, isSpam);
             }
             catch(ClassNotFoundException | SQLException ex){
-
+                ex.printStackTrace();
             }
         }
     }

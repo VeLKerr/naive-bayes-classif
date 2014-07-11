@@ -6,8 +6,10 @@
 
 package com.naivebayesclassifier;
 
+import static com.naivebayesclassifier.Main.PART_NUMBER;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 
 /**
  *
@@ -38,5 +40,14 @@ public abstract class Utils {
             return 0.0;
         }
         return value;
+    }
+    
+    
+    public static double average(List<Double> values){
+        double val = 0.0;
+        for(double v: values){
+            val += v;
+        }
+        return val / PART_NUMBER;
     }
 }

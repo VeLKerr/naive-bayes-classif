@@ -18,8 +18,15 @@ public class NaiveBayes {
     //спиок слов сообщения
     private final List<String> words;
     
+    private final UniqueWords uniqueWords;
+    
     public NaiveBayes(List<String> words) {
         this.words = words;
+        this.uniqueWords = new UniqueWords();
+    }
+
+    public UniqueWords getUniqueWords() {
+        return uniqueWords;
     }
     
     public static void setHamLimit(double hamLimit){
@@ -73,7 +80,12 @@ public class NaiveBayes {
         try{
             int denominator = Words.countUniqueWords() + Words.countSum(isSpam);
             for(String word: words){
-                prob += Math.log((double)(Words.getCount(word, isSpam) + LAPLASIAN) / denominator);
+                int cnt = Words.getCount(word, isSpam);
+                if(cnt < 0){
+                    cnt = 0;
+                    uniqueWords.add(word);
+                }
+                prob += Math.log((double)(cnt + LAPLASIAN) / denominator);
             }
             prob += getClassProbability(isSpam);
         }
@@ -88,9 +100,9 @@ public class NaiveBayes {
      * @param isSpam если <code>true</code>, С = SPAM. Иначе С = HAM.
      * @return значение вероятности.
      */
-    public double getGeneralProbability(boolean isSpam){
-        double probNumer = getProbabilityInClass(isSpam);
-        double otherProb = getProbabilityInClass(!isSpam);
+    private double getGeneralProbability(boolean isSpam){
+        double probNumer = Math.exp(getProbabilityInClass(isSpam));
+        double otherProb = Math.exp(getProbabilityInClass(!isSpam));
         return probNumer / (probNumer + otherProb);
     }
     
