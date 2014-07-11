@@ -1,5 +1,7 @@
 package com.naivebayesclassifier;
 
+import java.util.Map.Entry;
+
 /**
  * Класс для построения строк запросов
  * @author Kirius VeLKerr (Ivchenko Oleg)
@@ -7,22 +9,36 @@ package com.naivebayesclassifier;
 public class ParameterQueryBuilder {
     private static final String INSERTION_STARTING = "insert into words values (?, ";
     
+    private static abstract class InsertionAll{
+        private static final String GENERAL_STARTING = "Insert All ";
+        private static final String GENERAL_ENDING = "Select Null From Dual";
+        private static final String STARTING = "into words values (\'";
+        private static final String MIDDLE_PART = "\', ";
+        private static final String ENDING = ") ";
+    }
+    
     private static abstract class Counting{
         private static final String STARTING = "Select Sum(";
         private static final String ENDING = "amcnt) From Words";
     }
     
     private static abstract class Updating{
-        private static final String STARTING = "update words\n" +
-            "set ";
-        private static final String MIDDLE_PART = "amcnt = 1 + (\n" +
-            "  select ";
-        private static final String ENDING = "amcnt\n" +
-            "  from words\n" +
-            "  where text like ?\n" +
-            ")\n" +
-            "where text like ?";
+        private static final String STARTING = "update words set ";
+        private static final String MIDDLE_PART = "amcnt = ";
+        private static final String ENDING = "amcnt + 1 where text = ?";
     }
+    
+//    private static abstract class Updating{
+//        private static final String STARTING = "update words\n" +
+//            "set ";
+//        private static final String MIDDLE_PART = "amcnt = 1 + (\n" +
+//            "  select ";
+//        private static final String ENDING = "amcnt\n" +
+//            "  from words\n" +
+//            "  where text like ?\n" +
+//            ")\n" +
+//            "where text like ?";
+//    }
     
     /**
      * Если <code>true</code>, построение запросов будет производится для
@@ -73,6 +89,23 @@ public class ParameterQueryBuilder {
         }
         StringBuilder sb = new StringBuilder();
         sb.append(Counting.STARTING).append(addition).append(Counting.ENDING);
+        return sb.toString();
+    }
+    
+    public String buildInsertAll(UniqueWords uniqueWords){
+        StringBuilder sb = new StringBuilder();
+        sb.append(InsertionAll.GENERAL_STARTING);
+        for(Entry<String, Integer> entry: uniqueWords.getUniqueWords().entrySet()){
+            sb.append(InsertionAll.STARTING).append(entry.getKey()).append(InsertionAll.MIDDLE_PART);
+            if(isSpam){
+                sb.append(entry.getValue()).append(", 0");
+            }
+            else{
+                sb.append("0, ").append(entry.getValue());
+            }
+            sb.append(InsertionAll.ENDING);
+        }
+        sb.append(InsertionAll.GENERAL_ENDING);
         return sb.toString();
     }
 }

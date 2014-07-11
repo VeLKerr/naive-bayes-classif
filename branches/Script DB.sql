@@ -6,8 +6,8 @@ Drop Table Classifiedmessages Cascade Constraints Purge;
 -- Таблица, описывающая слова в обучающей выборке.
 Create Table Words(
   Text Varchar2(40), -- слово (уникатьное поле)
-  Spamcnt Number(5), -- кол-во повторений в спам-сообщениях
-  hamCnt number(5) -- кол-во повторений в нормальных сообщениях
+  Spamcnt Number(6), -- кол-во повторений в спам-сообщениях
+  hamCnt number(6) -- кол-во повторений в нормальных сообщениях
 );
 -- создание первичного ключа
 Alter Table Words Add Constraint Xpkwords Primary Key (Text);
@@ -16,7 +16,7 @@ Alter Table Words Add Constraint Xpkwords Primary Key (Text);
 -- Данная таблица может иметь только 2 записи: для класса spam и для класса ham.
 Create Table Messagescount(
   Mestype Varchar2(10), -- класс сообщения. Может принимать значения из множества {spam, ham}
-  counter number(5) -- кол-во сообщений в выборке
+  counter number(4) -- кол-во сообщений в выборке
 );
 -- создание первичного ключа
 Alter Table Messagescount Add Constraint Xpkmessagescount Primary Key (Mestype);

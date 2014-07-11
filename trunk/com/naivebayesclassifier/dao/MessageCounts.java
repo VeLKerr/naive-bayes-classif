@@ -14,8 +14,10 @@ import com.naivebayesclassifier.ConnectionProperties;
 public class MessageCounts {
     
     private static abstract class Queries{
-        private static final String createTypes = "Insert Into Messagescount Values (?, 0)";
-        private static final String increment = "Update Messagescount\n" + "Set Counter = 1 + (\n" + "  Select Counter\n" + "  From Messagescount\n" + "  Where Mestype like ?\n" + ")\n" + "Where Mestype like ?";
+        private static final String createTypes = "Insert All Into Messagescount Values (\'spam\', 0)\n" +
+"Into Messagescount Values (\'ham\', 0)\n" +
+"Select null From Dual";
+        private static final String increment = "Update Messagescount Set Counter = Counter + 1 Where Mestype = ?";
         private static final String getCounter = "Select Counter From Messagescount Where Mestype like ?";
         private static final String countAll = "Select Sum(Counter) From Messagescount";
     }
@@ -35,14 +37,19 @@ public class MessageCounts {
      */
     public static void createMessageTypes() throws ClassNotFoundException, SQLException {
         Connection conn = ConnectionProperties.createConnection();
-        PreparedStatement ps = conn.prepareStatement(Queries.createTypes);
-        ps.setString(1, "spam");
-        ps.executeUpdate();
-        ps.setString(1, "ham");
-        ps.executeUpdate();
-        ps.close();
+        conn.createStatement().executeUpdate(Queries.createTypes);
         conn.close();
     }
+//    public static void createMessageTypes() throws ClassNotFoundException, SQLException {
+//        Connection conn = ConnectionProperties.createConnection();
+//        PreparedStatement ps = conn.prepareStatement(Queries.createTypes);
+//        ps.setString(1, "spam");
+//        ps.executeUpdate();
+//        ps.setString(1, "ham");
+//        ps.executeUpdate();
+//        ps.close();
+//        conn.close();
+//    }
     
     /**
      * Увеличить счётчик сообщений определённого класса.
@@ -56,7 +63,6 @@ public class MessageCounts {
         PreparedStatement ps = conn.prepareStatement(Queries.increment);
         String parameter = buildParameter(isSpam);
         ps.setString(1, parameter);
-        ps.setString(2, parameter);
         ps.executeUpdate();
         ps.close();
         conn.close();

@@ -111,13 +111,11 @@ public class Words{
         ParameterQueryBuilder pqb = new ParameterQueryBuilder(isSpam);
         if(rs.next()){
             ps = conn.prepareStatement(pqb.buildUpdate());
-            ps.setString(1, word);
-            ps.setString(2, word);
         }
         else{
             ps = conn.prepareStatement(pqb.buildInsert());
-            ps.setString(1, word);
         }
+        ps.setString(1, word);
         ps.executeUpdate();
         rs.close();
         ps.close();
@@ -146,6 +144,13 @@ public class Words{
             else{
                 count = rs.getInt(3);
             }
+        }
+        else{ 
+            /**
+             * если записи в базе с этим словом нет, это слово новое, его обрабатываем
+             * особым способом @see UniqueWords.
+             */
+            count = -1;
         }
         rs.close();
         ps.close();

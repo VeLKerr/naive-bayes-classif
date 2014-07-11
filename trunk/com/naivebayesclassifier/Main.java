@@ -9,11 +9,8 @@ import java.util.List;
 import com.naivebayesclassifier.dao.ClassifiedMessages;
 import com.naivebayesclassifier.dao.GeneralOperations;
 import com.naivebayesclassifier.dao.MessageCounts;
-import com.naivebayesclassifier.dao.Words;
 import com.naivebayesclassifier.reports.ExcelView;
 import com.naivebayesclassifier.reports.MetricMatrixes;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * <b><font color="red">Главный класс программы</font></b>
@@ -21,7 +18,7 @@ import java.util.Arrays;
  */
 public class Main {
     //кол-во папок с сообщениями
-    public static final int PART_NUMBER = 3;
+    public static final int PART_NUMBER = 4;
     //путь к папкам с сообщениями
     public static final String PATH_TO_FILES = "lingspam_public\\bare\\"; 
     
@@ -108,6 +105,8 @@ public class Main {
                         //Words.addAll(words, isSpam); //после классификации системой сообщения,
                         //происходит её дообучение на нём. !!! ORA-01000: maximum open cursors exceeded (cursors = 1000).
                     }
+                    List<Double> list = cest.computeEstimates();
+                    System.out.println("+++" + list.get(0) + " " + list.get(1));
                     mm.setAllMetrics(cest, i, j);
                 }
             }
