@@ -1,16 +1,12 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package com.naivebayesclassifier.reports;
 
+import com.naivebayesclassifier.ClassificationEstimates;
 import static com.naivebayesclassifier.Main.PART_NUMBER;
 import com.naivebayesclassifier.Utils;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.sql.SQLException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.poi.hssf.usermodel.HSSFCell;
@@ -20,17 +16,34 @@ import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.eclipse.persistence.jpa.rs.MatrixParameters;
 
 /**
- *
+ * Класс, отвечающий за генерацию Excel-отчётов по результатам исследования.
  * @author Kirius VeLKerr (Ivchenko Oleg)
  */
 public class ExcelView {
+    /**
+     * Текст угловой ячейки листа с матрицей.
+     */
     private static final String CORNER_CELL_TEXT = "Learn \\ Test";
-    private static final String[] sheetNames = {
+    
+    /**
+     * Названия Excel-листов.
+     */
+    private static final String[] SHEET_NAMES = {
         "Accuracy", "Precision", "Recall", "F-measure"
     };
+    
+    /**
+     * Названия классов сообщений.
+     */
+    private static final String[] CLASSES = {"Spam", "Ham"};
+    
+    /**
+     * Константа, показывающая сколько знаков после запятой оставлять при
+     * округлении матриц с метриками.
+     */
+    private static final int SYMBOLS_AFTER_KOMA = 4;
     
     /**
      * Автоматическое открытие файла с отчётом.
@@ -46,16 +59,97 @@ public class ExcelView {
         }
     }
     
-    public static void generateReport(MetricMatrixes mm){
-        automaticallyOpenFile(generateRep(mm));
+    public static void generateTestingReport(ClassificationEstimates cest){
+        automaticallyOpenFile(generateTestingRep(cest));
     }
     
-    private static String generateRep(MetricMatrixes mm){
+    public static String generateTestingRep(ClassificationEstimates cest){
         FileOutputStream fileOut = null;
-        String fname = FileNameBuilder.buildFName();
+        String fname = FileNameBuilder.buildFName(false);
+        try{
+            fileOut = new FileOutputStream(fname);
+            HSSFWorkbook workbook = new HSSFWorkbook();
+            HSSFSheet workSheet = workbook.createSheet("Estimates");
+            
+            HSSFCellStyle mainHeader = workbook.createCellStyle();
+            mainHeader = setMainHeadStyle(mainHeader);
+            HSSFCellStyle usual = workbook.createCellStyle();
+            usual = setUsualStyle(usual);
+            HSSFCellStyle accuracyHeader = workbook.createCellStyle();
+            accuracyHeader = setCornerStyle(accuracyHeader);
+            HSSFCellStyle fMeasureHeader = workbook.createCellStyle();
+            fMeasureHeader = setNewAdditionalCellsStyle(fMeasureHeader);
+            HSSFCellStyle preRecHeader = workbook.createCellStyle();
+            preRecHeader = setHeaderCellsStyle(preRecHeader);
+            HSSFCellStyle spamHeaderCellStyle = workbook.createCellStyle();
+            spamHeaderCellStyle = setSpamCellsStyle(spamHeaderCellStyle);
+            
+            HSSFRow row = workSheet.createRow(0);
+            HSSFCell cell = row.createCell(0);
+            cell.setCellStyle(mainHeader);
+            cell.setCellValue("Testing folders: ");
+            cell = row.createCell(1);
+            cell.setCellStyle(usual);
+            cell.setCellValue(cest.getTestingDataSetNumbers().toString());
+            
+            row = workSheet.createRow(1);
+            cell = row.createCell(0);
+            cell.setCellStyle(accuracyHeader);
+            cell.setCellValue(SHEET_NAMES[0]);
+            cell = row.createCell(1);
+            cell.setCellStyle(usual);
+            cell.setCellValue(cest.computeAccuracy());
+            
+            row = workSheet.createRow(2);
+            for(int i=0; i<CLASSES.length; i++){
+                cell = row.createCell(i + 1);
+                cell.setCellStyle(spamHeaderCellStyle);
+                cell.setCellValue(CLASSES[i]);
+            }
+            
+            List<Double> estimates = cest.computeEstimates();
+            
+            row = workSheet.createRow(3);
+            cell = row.createCell(0);
+            cell.setCellStyle(preRecHeader);
+            cell.setCellValue(SHEET_NAMES[1]);
+            for(int j=0; j<CLASSES.length; j++){
+                cell = row.createCell(j + 1);
+                cell.setCellStyle(usual);
+                cell.setCellValue(estimates.get(2 * j));
+            }
+            
+            row = workSheet.createRow(4);
+            cell = row.createCell(0);
+            cell.setCellStyle(preRecHeader);
+            cell.setCellValue(SHEET_NAMES[2]);
+            for(int j=0; j<CLASSES.length; j++){
+                cell = row.createCell(j + 1);
+                cell.setCellStyle(usual);
+                cell.setCellValue(estimates.get(2 * j + 1));
+            }
+        }
+        catch (IOException | SQLException | ClassNotFoundException ex) {
+            Logger.getLogger(ExcelView.class.getName()).log(Level.SEVERE, "File not found!", ex);
+        }
+        return fname;
+    }
+    
+    /**
+     * Сгенерировать отчёт по результатам исследования.
+     * @param mm матрицы с метриками.
+     */
+    public static void generateGeneralReport(MetricMatrixes mm){
+        automaticallyOpenFile(generateGeneralRep(mm));
+    }
+    
+    private static String generateGeneralRep(MetricMatrixes mm){
+        FileOutputStream fileOut = null;
+        String fname = FileNameBuilder.buildFName(true);
         try {
             fileOut = new FileOutputStream(fname);
             HSSFWorkbook workbook = new HSSFWorkbook();
+            
             HSSFCellStyle mainHeader = workbook.createCellStyle();
             mainHeader = setMainHeadStyle(mainHeader);
             HSSFCellStyle usual = workbook.createCellStyle();
@@ -64,16 +158,17 @@ public class ExcelView {
             corner = setCornerStyle(corner);
             HSSFCellStyle header = workbook.createCellStyle();
             header = setHeaderCellsStyle(header);
+            
             HSSFSheet workSheet = null;
-            for(int i=0; i<sheetNames.length; i++){
-                workSheet = workbook.createSheet(sheetNames[i]);
+            for(int i=0; i<SHEET_NAMES.length; i++){
+                workSheet = workbook.createSheet(SHEET_NAMES[i]);
                 HSSFRow row = workSheet.createRow(0);
                 HSSFCell cell = row.createCell(0);
                 cell.setCellStyle(mainHeader);
                 switch(i){
                     case 0:{
                         int rowCnt = 0;
-                        cell.setCellValue(sheetNames[i]);
+                        cell.setCellValue(SHEET_NAMES[i]);
                         CellRangeAddress region = new CellRangeAddress(rowCnt, rowCnt, 0, PART_NUMBER - 1);
                         workSheet.addMergedRegion(region);
                         rowCnt++;
@@ -84,7 +179,7 @@ public class ExcelView {
                     case 2:
                     case 3:{
                         int rowCnt = 0;
-                        cell.setCellValue(sheetNames[i] + "(Spam)");
+                        cell.setCellValue(SHEET_NAMES[i] + "(" + CLASSES[0] + ")");
                         CellRangeAddress region = new CellRangeAddress(rowCnt, rowCnt, 0, PART_NUMBER - 1);
                         workSheet.addMergedRegion(region);
                         rowCnt++;
@@ -93,7 +188,7 @@ public class ExcelView {
                         row = workSheet.createRow(rowCnt);
                         cell = row.createCell(0);
                         cell.setCellStyle(mainHeader);
-                        cell.setCellValue(sheetNames[i] + "(Ham)");
+                        cell.setCellValue(SHEET_NAMES[i] + "(" + CLASSES[1] + ")");
                         region = new CellRangeAddress(rowCnt, rowCnt, 0, PART_NUMBER - 1);
                         workSheet.addMergedRegion(region);
                         rowCnt++;
@@ -104,12 +199,22 @@ public class ExcelView {
             }
             workbook.write(fileOut);
             fileOut.flush();
-        } catch (IOException ex) {
+        } 
+        catch (IOException ex) {
             Logger.getLogger(ExcelView.class.getName()).log(Level.SEVERE, "File not found!", ex);
         }
         return fname;
     }
     
+    /**
+     * Представление матрицы в Excel-файле.
+     * @param workSheet Excel-лист, где должна располагаться матрица.
+     * @param matrix матрица.
+     * @param firstRowIndex номер строки, начиная с которой будет выводится матрица.
+     * @param usual <i>стиль</i> ячейки с элементом матрицы.
+     * @param corner <i>стиль</i> ячейки с заголовком строки или столбца.
+     * @param header <i>стиль</i> углового элемента.
+     */
     private static void matrixView(HSSFSheet workSheet, double [][] matrix,
                             int firstRowIndex, HSSFCellStyle usual,
                             HSSFCellStyle corner, HSSFCellStyle header){
@@ -133,7 +238,8 @@ public class ExcelView {
                 cell = row.createCell(j);
                 if(j != 0){
                     cell.setCellStyle(usual);
-                    cell.setCellValue(Utils.roundDouble(Utils.nanToZero(matrix[i - 1][j - 1]), 4));
+                    cell.setCellValue(Utils.roundDouble(
+                            Utils.nanToZero(matrix[i - 1][j - 1]), SYMBOLS_AFTER_KOMA));
                 }
                 else{
                     cell.setCellStyle(header);
@@ -158,13 +264,13 @@ public class ExcelView {
     private static HSSFCellStyle setCornerStyle(HSSFCellStyle cellStyle){
         cellStyle.setFillForegroundColor(HSSFColor.LIGHT_TURQUOISE.index); /*устанавливает фон*/
         cellStyle.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND); 
-        cellStyle.setAlignment(HSSFCellStyle.ALIGN_LEFT);  /*эти значения аналогичны тем, что в предидущей функции толкьо с другими параметрами*/
+        cellStyle.setAlignment(HSSFCellStyle.ALIGN_LEFT);  /*эти значения аналогичны тем, что в предидущей функции только с другими параметрами*/
         cellStyle.setVerticalAlignment(HSSFCellStyle.VERTICAL_CENTER);/*высоту ячейки*/
         return cellStyle;  /*возвращает стиль ячейки*/
     }
 
     private static HSSFCellStyle setUsualStyle(HSSFCellStyle cellStyle) {/*функция которая назначает стиль всех остальных ячеек.*/
-        cellStyle.setAlignment(HSSFCellStyle.ALIGN_LEFT);  /*эти значения аналогичны тем, что в предидущей функции толкьо с другими параметрами*/
+        cellStyle.setAlignment(HSSFCellStyle.ALIGN_LEFT);  /*эти значения аналогичны тем, что в предидущей функции только с другими параметрами*/
         cellStyle.setVerticalAlignment(HSSFCellStyle.VERTICAL_CENTER);
         return cellStyle;
     }
@@ -179,6 +285,14 @@ public class ExcelView {
     
     private static HSSFCellStyle setNewAdditionalCellsStyle(HSSFCellStyle cellStyle) {
         cellStyle.setFillForegroundColor(HSSFColor.LIGHT_ORANGE.index);
+        cellStyle.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
+        cellStyle.setAlignment(HSSFCellStyle.ALIGN_LEFT);
+        cellStyle.setVerticalAlignment(HSSFCellStyle.VERTICAL_CENTER);
+        return cellStyle;
+    }
+    
+    private static HSSFCellStyle setSpamCellsStyle(HSSFCellStyle cellStyle) {
+        cellStyle.setFillForegroundColor(HSSFColor.LEMON_CHIFFON.index);
         cellStyle.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
         cellStyle.setAlignment(HSSFCellStyle.ALIGN_LEFT);
         cellStyle.setVerticalAlignment(HSSFCellStyle.VERTICAL_CENTER);

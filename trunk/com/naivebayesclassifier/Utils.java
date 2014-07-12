@@ -1,18 +1,15 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package com.naivebayesclassifier;
 
-import static com.naivebayesclassifier.Main.PART_NUMBER;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * Класс функций-математических утилит.
  * @author Kirius VeLKerr (Ivchenko Oleg)
  */
 public abstract class Utils {
@@ -42,12 +39,76 @@ public abstract class Utils {
         return value;
     }
     
-    
-    public static double average(List<Double> values){
+    /**
+     * Рассчёт среднего значения списка чисел.
+     * @param values список чисел.
+     * @return среднее значение.
+     */
+    public static double average(double[] values){
         double val = 0.0;
         for(double v: values){
             val += v;
         }
-        return val / PART_NUMBER;
+        return val / values.length;
+    }
+
+    /**
+     * Ввести целое число.
+     * @param min минимальная граница вводимых чисел.
+     * @param max максимальная граница.
+     * @return полученное число.
+     * @throws IOException
+     */
+    public static int inputNumber(BufferedReader br, int min, int max) throws IOException{
+        int number = 0;
+        while (number == 0) {
+            try {
+                number = Integer.parseInt(br.readLine());
+                if (number < min || number > max) {
+                    throw new NumberFormatException();
+                }
+            } catch (NumberFormatException nfe) {
+                number = 0;
+                System.out.print("\tIncorrect! Input once more: ");
+            }
+        }
+        return number;
+    }
+    
+    /**
+     * Ввести действительное число.
+     * @param min минимальная граница вводимых чисел.
+     * @param max максимальная граница.
+     * @return полученное число.
+     * @throws IOException
+     */
+    public static double inputDouble(BufferedReader br, double min, double max) throws IOException{
+        double number = 0.0;
+        while (number == 0.0) {
+            try {
+                number = Double.parseDouble(br.readLine());
+                if (number < min || number > max) {
+                    throw new NumberFormatException();
+                }
+            } catch (NumberFormatException nfe) {
+                number = 0.0;
+                System.out.print("\tIncorrect! Input once more: ");
+            }
+        }
+        return number;
+    }
+    
+    public static List<Integer> inputListNumbers(BufferedReader br, int min, int max) throws IOException{
+        List<Integer> numbers = new ArrayList<>();
+        while(true){
+            numbers.add(inputNumber(br, min, max));
+            System.out.println("If you want to input number onece more, press \'Y\'. ");
+            System.out.print("Otherwise, press \'N\'");
+            String answStr = br.readLine();
+            if(answStr.equalsIgnoreCase("n")){
+                break;
+            }
+        }
+        return numbers;
     }
 }

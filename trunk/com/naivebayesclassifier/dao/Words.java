@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.util.List;
 import com.naivebayesclassifier.ConnectionProperties;
 import com.naivebayesclassifier.ParameterQueryBuilder;
+import com.naivebayesclassifier.UniqueWords;
 
 /**
  * Класс, описывающий методы доступа к таблице слов в обучающей выборке
@@ -69,6 +70,7 @@ public class Words{
      * @param isSpam является ли сообщение спасмом.
      * @throws ClassNotFoundException при ошибке нахождения JDBC-драйвера
      * @throws SQLException при ошибке выполнения запроса.
+     * @deprecated 
      */
     public static void addAll(List<String> words, boolean isSpam) throws ClassNotFoundException, SQLException{
         Connection conn = ConnectionProperties.createConnection();
@@ -96,6 +98,30 @@ public class Words{
     }
     
     /**
+     * Добавления сообщения в обучающую выборку.
+     * @param words список слов сообщения.
+     * @param uniqueWords уникальные (новые для базы) слова.
+     * @param isSpam является ли сообщение спасмом.
+     * @throws ClassNotFoundException при ошибке нахождения JDBC-драйвера
+     * @throws SQLException при ошибке выполнения запроса.
+     */
+    public static void addAll(List<String> words, UniqueWords uniqueWords, boolean isSpam) throws ClassNotFoundException, SQLException{
+        Connection conn = ConnectionProperties.createConnection();
+        ParameterQueryBuilder pqb = new ParameterQueryBuilder(isSpam);
+        PreparedStatement ps = conn.prepareStatement(pqb.buildInsertAll(uniqueWords));
+        ps.executeQuery();
+        List<String> nonUniqueWords = uniqueWords.getNonUniqueWords(words);
+        String updQuery = pqb.buildUpdate();
+        for(String word: nonUniqueWords){
+            ps = conn.prepareStatement(updQuery);
+            ps.setString(1, word);
+            ps.executeUpdate();
+        }
+        ps.close();
+        conn.close();
+    }
+    
+    /**
      * Добавление слова в таблицу.
      * @param word слово
      * @param isSpam <code>true</code> если слово принадлежит спам-сообщению.
@@ -109,11 +135,13 @@ public class Words{
         ps.executeQuery();
         ResultSet rs = ps.getResultSet();
         ParameterQueryBuilder pqb = new ParameterQueryBuilder(isSpam);
+        String insQuery = pqb.buildInsert();
+        String updQuery = pqb.buildUpdate();
         if(rs.next()){
-            ps = conn.prepareStatement(pqb.buildUpdate());
+            ps = conn.prepareStatement(updQuery);
         }
         else{
-            ps = conn.prepareStatement(pqb.buildInsert());
+            ps = conn.prepareStatement(insQuery);
         }
         ps.setString(1, word);
         ps.executeUpdate();

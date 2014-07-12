@@ -18,17 +18,29 @@ public class NaiveBayes {
     //спиок слов сообщения
     private final List<String> words;
     
+    /**
+     * коллекция слов, ещё не встречавшихся в обучающей выборке
+     */
     private final UniqueWords uniqueWords;
     
     public NaiveBayes(List<String> words) {
         this.words = words;
         this.uniqueWords = new UniqueWords();
     }
-
+    
+    /**
+     * Получить слова, ещё не встречавшиеся в обучающей выборке.
+     * @return слова.
+     */
     public UniqueWords getUniqueWords() {
         return uniqueWords;
     }
     
+    /**
+     * Установаить пороговое значение вероятности P(SPAM), выше которой сообщение
+     * классифицируется как спам. По умолчанию <code>hamLimit = 0.52</code>.
+     * @param hamLimit новое значение.
+     */
     public static void setHamLimit(double hamLimit){
         HAM_LIMIT = hamLimit;
     }
@@ -78,7 +90,7 @@ public class NaiveBayes {
     private double getProbabilityInClass(boolean isSpam){
         double prob = 0;
         try{
-            int denominator = Words.countUniqueWords() + Words.countSum(isSpam);
+            int denominator = LAPLASIAN * Words.countUniqueWords() + Words.countSum(isSpam);
             for(String word: words){
                 int cnt = Words.getCount(word, isSpam);
                 if(cnt < 0){

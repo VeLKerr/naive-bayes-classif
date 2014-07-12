@@ -24,14 +24,15 @@ import static com.naivebayesclassifier.Main.PART_NUMBER;
  */
 public class TextPreprocessing {
     /**
-     * Номер папки с тестировочным набором сообщений.
+     * Номера папок с тестировочным набором сообщений.
      */
-    //private final int testingDataSetNumber;
-    private final List<Integer> testingDataSetNumbers;
-    private final List<Integer> learningDataSetNumbers;
+    private List<Integer> testingDataSetNumbers;
+    /**
+     * Номера папок обучающей выборки.
+     */
+    private List<Integer> learningDataSetNumbers;
 
     public TextPreprocessing() {
-//        this.testingDataSetNumber = testingDataSetNumber;
         this.testingDataSetNumbers = new ArrayList<>();
         this.learningDataSetNumbers = new ArrayList<>();
     }
@@ -48,6 +49,10 @@ public class TextPreprocessing {
         return learningDataSetNumbers;
     }
     
+    public List<Integer> getTestingNumbers(){
+        return testingDataSetNumbers;
+    }
+    
     /**
      * Запись тренировочной выборки в БД.
      * @throws IOException при ошибке чтения текста из файла с сообщением.
@@ -55,27 +60,40 @@ public class TextPreprocessing {
      * @throws SQLException при ошибке выполнения запроса.
      */
     public void writeToDB() throws IOException, SQLException, ClassNotFoundException{
-        File dir = null;
-        for(int i=1; i<=PART_NUMBER; i++){
-            if(learningDataSetNumbers.contains(i)){
-                dir = new File(Main.buildPath(i));
-                for(String fname: dir.list()){
-                    boolean isSpam = fname.contains(Main.SPAM_FILE_FEATURE);
-                    MessageCounts.incrementCounter(isSpam);
-                    try {
-                        BufferedReader br = new BufferedReader(new FileReader(new File(dir, fname)));
-                        String line = null;
-                        while((line = br.readLine()) != null){
-                            toDB(preprocess(line), isSpam);
-                        }
-                    } catch (FileNotFoundException ex) {
-                        Logger.getLogger(TextPreprocessing.class.getName()).log(Level.SEVERE, "File not found!", ex);
-                    }
-                    System.err.println("Trained on " + fname);
-                }
-            }
+        for(int lNumber: learningDataSetNumbers){
+            writeToDB(lNumber);
         }
     }
+    
+//    /**
+//     * Запись тренировочной выборки в БД.
+//     * @throws IOException при ошибке чтения текста из файла с сообщением.
+//     * @throws ClassNotFoundException при ошибке нахождения JDBC-драйвера.
+//     * @throws SQLException при ошибке выполнения запроса.
+//     * @deprecated 
+//     */
+//    public void writeToDB() throws IOException, SQLException, ClassNotFoundException{
+//        File dir = null;
+//        for(int i=1; i<=PART_NUMBER; i++){
+//            if(learningDataSetNumbers.contains(i)){
+//                dir = new File(Main.buildPath(i));
+//                for(String fname: dir.list()){
+//                    boolean isSpam = fname.contains(Main.SPAM_FILE_FEATURE);
+//                    MessageCounts.incrementCounter(isSpam);
+//                    try {
+//                        BufferedReader br = new BufferedReader(new FileReader(new File(dir, fname)));
+//                        String line = null;
+//                        while((line = br.readLine()) != null){
+//                            toDB(preprocess(line), isSpam);
+//                        }
+//                    } catch (FileNotFoundException ex) {
+//                        Logger.getLogger(TextPreprocessing.class.getName()).log(Level.SEVERE, "File not found!", ex);
+//                    }
+//                    System.err.println("Trained on " + fname);
+//                }
+//            }
+//        }
+//    }
     
     /**
      * Запись тренировочной выборки в БД.
@@ -111,7 +129,7 @@ public class TextPreprocessing {
      * @return список слов, получившихся после разбиения.
      * @throws IOException при ошибке чтения текста из файла с сообщением.
      */
-    public List<String> prepareToClassifyFile(File parent, String fileName) throws IOException{
+    public static List<String> prepareToClassifyFile(File parent, String fileName) throws IOException{
         List<String> words = new ArrayList<>();
         try{
             BufferedReader br = new BufferedReader(new FileReader(new File(parent, fileName)));
@@ -135,7 +153,7 @@ public class TextPreprocessing {
      * @param text текст сообщения.
      * @return список слов.
      */
-    private List<String> preprocess(String text){
+    private static List<String> preprocess(String text){
         List<String> words = new ArrayList<>();
         text = text.toLowerCase(Locale.US);
         Pattern r = Pattern.compile("[A-z]+[a-zA-Z0-9]*");
@@ -165,4 +183,13 @@ public class TextPreprocessing {
             }
         }
     }
+
+    public void setTestingDataSetNumbers(List<Integer> testingDataSetNumbers) {
+        this.testingDataSetNumbers = testingDataSetNumbers;
+    }
+
+    public void setLearningDataSetNumbers(List<Integer> learningDataSetNumbers) {
+        this.learningDataSetNumbers = learningDataSetNumbers;
+    }
+    
 }
