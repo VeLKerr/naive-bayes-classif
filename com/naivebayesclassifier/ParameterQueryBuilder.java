@@ -92,6 +92,11 @@ public class ParameterQueryBuilder {
         return sb.toString();
     }
     
+    /**
+     * Построение запроса на вставку коллекции новых слов в базу одним запросом.
+     * @param uniqueWords уникальные (новые) слова.
+     * @return строка запроса.
+     */
     public String buildInsertAll(UniqueWords uniqueWords){
         StringBuilder sb = new StringBuilder();
         sb.append(InsertionAll.GENERAL_STARTING);

@@ -9,6 +9,7 @@ import java.util.List;
 import com.naivebayesclassifier.dao.ClassifiedMessages;
 import com.naivebayesclassifier.dao.GeneralOperations;
 import com.naivebayesclassifier.dao.MessageCounts;
+import com.naivebayesclassifier.dao.Words;
 import com.naivebayesclassifier.reports.ExcelView;
 import com.naivebayesclassifier.reports.MetricMatrixes;
 
@@ -17,14 +18,16 @@ import com.naivebayesclassifier.reports.MetricMatrixes;
  * @author VeLKerr
  */
 public class Main {
-    //кол-во папок с сообщениями
+    //кол-во папок с сообщениями (в полном наборе данных)
     public static final int PART_NUMBER = 4;
-    //путь к папкам с сообщениями
+    
+    //путь к папкам с сообщениями (bare в данном наборе можно изметить на
+    //lemm, stop или lemm_stop.
     public static final String PATH_TO_FILES = "lingspam_public\\bare\\"; 
     
     //Номер папки набором сообщений, предназначенных для тестировки.
     //По принципу кросс-валидации, обучение на этом наборе проводится не будет.
-    private static int testingDataSetNumber;
+    //private static int testingDataSetNumber;
     
     //строка, которая встречается токлько в названиях спам-сообщений.
     //Используется для экспертной классификации сообщений, т.е. для 
@@ -52,36 +55,25 @@ public class Main {
             return null;
         }
     }
-    
-    /**
-     * Ввести число.
-     * @param min минимальная граница вводимых чисел.
-     * @param max максимальная граница.
-     * @return полученное число.
-     * @throws IOException 
-     */
-    private static int inputNumber(int min, int max)throws IOException{
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        int number = 0;
-        while(number == 0){
-            try{
-                number = Integer.parseInt(br.readLine());
-                if(number < min || number > max){
-                    throw new NumberFormatException();
-                }
-            }
-            catch(NumberFormatException nfe){
-                number = 0;
-                System.out.print("\tIncorrect! Input once more: ");
-            }
+        
+    private static void testingOneFolder(ClassificationEstimates cest, int testingDataSetNumber)throws ClassNotFoundException, SQLException, IOException{
+        File dir = new File(buildPath(testingDataSetNumber));
+        cest.addTestingNumber(testingDataSetNumber);
+        for(String fname: dir.list()){
+            List<String> words = TextPreprocessing.prepareToClassifyFile(dir, fname);
+            NaiveBayes nb = new NaiveBayes(words);
+            boolean isSpam = nb.isSpam();
+            System.err.println("Tested " + fname);
+            ClassifiedMessages.add(fname, isSpam);
+            Words.addAll(words, nb.getUniqueWords(), isSpam);//после классификации системой сообщения,
+            //происходит её дообучение на нём.
         }
-        return number;
     }
     
     private static void testing() throws ClassNotFoundException, SQLException, IOException{
         MessageCounts.createMessageTypes();
         TextPreprocessing tp = new TextPreprocessing();
-        MetricMatrixes mm = new MetricMatrixes();
+        MetricMatrixes mm = new MetricMatrixes(PART_NUMBER, PART_NUMBER);
         ClassificationEstimates cest = new ClassificationEstimates();
         
 //        tp.addLearningNumber(1);
@@ -97,13 +89,13 @@ public class Main {
                     File dir = new File(buildPath(j));
                     cest.addTestingNumber(j);
                     for(String fname: dir.list()){
-                        List<String> words = tp.prepareToClassifyFile(dir, fname);
+                        List<String> words = TextPreprocessing.prepareToClassifyFile(dir, fname);
                         NaiveBayes nb = new NaiveBayes(words);
                         boolean isSpam = nb.isSpam();
                         System.err.println("Tested " + fname + " (" + j + ")");
                         ClassifiedMessages.add(fname, isSpam);
-                        //Words.addAll(words, isSpam); //после классификации системой сообщения,
-                        //происходит её дообучение на нём. !!! ORA-01000: maximum open cursors exceeded (cursors = 1000).
+                        Words.addAll(words, nb.getUniqueWords(), isSpam);//после классификации системой сообщения,
+                        //происходит её дообучение на нём.
                     }
                     List<Double> list = cest.computeEstimates();
                     System.out.println("+++" + list.get(0) + " " + list.get(1));
@@ -112,7 +104,49 @@ public class Main {
             }
             GeneralOperations.deleteAll("CLASSIFIEDMESSAGES");
         }
-        ExcelView.generateReport(mm);
+        ExcelView.generateGeneralReport(mm);
+    }
+    
+    /**
+     * Режим исследования.
+     * @throws ClassNotFoundException
+     * @throws SQLException
+     * @throws IOException 
+     */
+    private static void testingKFold() throws ClassNotFoundException, SQLException, IOException{
+        TextPreprocessing tp = new TextPreprocessing();
+        MetricMatrixes mm = new MetricMatrixes(PART_NUMBER, PART_NUMBER);
+        ClassificationEstimates cest = new ClassificationEstimates();
+        DataSetPartition dsp = new DataSetPartition();
+        
+        for(int i=1; i<mm.getM(); i++){
+            dsp.setTestingSize(i);
+            for(int j=1; j<=mm.getK(); j++){
+                tp.setLearningDataSetNumbers(dsp.getLearning());
+                tp.setTestingDataSetNumbers(dsp.getTesting());
+                MessageCounts.createMessageTypes();
+                tp.writeToDB();
+                for(int number: tp.getTestingNumbers()){
+                    testingOneFolder(cest, number);
+                }
+                mm.setAllMetrics(cest, i, j);
+                cest.removeAllTestingNumbers();
+                GeneralOperations.deleteAll();
+                dsp.nextExperiment();
+            }
+        }
+        
+        ExcelView.generateGeneralReport(mm);
+    }
+    
+    private static void outputMenu(int mode){
+        String str = "Input numbers of folders for ";
+        if(mode == 1){
+            System.out.println(str + "learning");
+        }
+        else{
+            System.out.println(str + "testing");
+        }
     }
 
     /**
@@ -120,51 +154,42 @@ public class Main {
      * @throws java.io.IOException
      */
     public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
-        GeneralOperations.deleteAll();
-        testing();
-        
-//        TextPreprocessing tp = null;
-//        System.out.println("If you want that the system was trained, press 1.");
-//        System.out.println("If you want that the system classified messages, press 2.");
-//        int mode = inputNumber(1, 2);
-//        System.out.print("Input number of folder which remains for classification: ");
-//        testingDataSetNumber = inputNumber(1, PART_NUMBER);
-//        tp = new TextPreprocessing();
-//        tp.addTestingNumber(testingDataSetNumber);
-//        if(mode == 1){
-//            GeneralOperations.deleteAll(); //удаление данных прошлого сеанса обучения.
-//            //(Это делается для того, чтобы исключить ошибку нарушения уникальности слов в базе.
-//            //Такая ошибка возможна т.к. обучение происходит на тех же 10-и папках набора bare).
-//            MessageCounts.createMessageTypes();
-//            tp.writeToDB();
-//        }
-//        else{
-//            File dir = new File(buildPath(testingDataSetNumber));
-//            
-//            List<Integer> testingDataSetNumbers = new ArrayList<>();
-//            testingDataSetNumbers.add(testingDataSetNumber);
-//            
-//            ClassificationEstimates cest = new ClassificationEstimates(testingDataSetNumbers);
-//            for(String fname: dir.list()){
-//                List<String> words = tp.prepareToClassifyFile(dir, fname);
-//                NaiveBayes nb = new NaiveBayes(words);
-//                boolean isSpam = nb.isSpam();
-//                System.out.println(isSpam);
-//                ClassifiedMessages.add(fname, isSpam);
-//                Words.addAll(words, isSpam); //после классификации системой сообщения,
-//                //происходит её дообучение на нём.
-//            }
-//            System.out.println("=========================================");
-//            System.out.println("Accuracy: " + cest.computeAccuracy());
-//            List<Double> estimates = cest.computeEstimates();
-//            System.out.println("\nPrecision(spam): " + estimates.get(0));
-//            System.out.println("Recall(spam): " + estimates.get(1));
-//            System.out.println("Precision(ham): " + estimates.get(2));
-//            System.out.println("Recall(ham): " + estimates.get(3));
-//            List<Double> measures = cest.computeFMeasure(estimates, 1);
-//            System.out.println("\nF-measure(spam): " + measures.get(0));
-//            System.out.println("\nF-measure(ham): " + measures.get(1));
-//            System.out.println("=========================================");
-//        }
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        System.out.print("Input mode in which system will works: ");
+        int mode = Utils.inputNumber(br, 1, 3);
+        switch(mode){
+            case 1:{
+                outputMenu(mode);
+                TextPreprocessing tp = new TextPreprocessing();
+                tp.setLearningDataSetNumbers(Utils.inputListNumbers(br, 1, PART_NUMBER));
+                tp.writeToDB();
+                break;
+            }
+            case 2:{
+                outputMenu(mode);
+                TextPreprocessing tp = new TextPreprocessing();
+                tp.setTestingDataSetNumbers(Utils.inputListNumbers(br, 1, PART_NUMBER));
+                ClassificationEstimates cest = new ClassificationEstimates();
+                for(int testingNumber: tp.getTestingNumbers()){
+                    testingOneFolder(cest, testingNumber);
+                }
+                System.out.print("Input BETA for computing F-measures: ");
+                double beta = Utils.inputDouble(br, 0.0, Double.MAX_VALUE);
+                System.out.println("Accuracy = " + cest.computeAccuracy());
+                List<Double> estimates = cest.computeEstimates();
+                System.out.println("Pricision(Spam) = " + estimates.get(0));
+                System.out.println("Pricision(Ham) = " + estimates.get(2));
+                System.out.println("Recall(Spam) = " + estimates.get(1));
+                System.out.println("Recall(Ham) = " + estimates.get(3));
+                List<Double> fMeasures = cest.computeFMeasure(estimates, beta);
+                System.out.println("F-measure(Spam) = " + fMeasures.get(0));
+                System.out.println("F-measure(Ham) = " + fMeasures.get(1));
+                break;
+            }
+            case 3:{
+                testingKFold();
+                break;
+            }
+        }
     }
 }

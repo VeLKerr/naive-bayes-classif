@@ -12,11 +12,11 @@ import java.util.List;
  * @author Kirius VeLKerr (Ivchenko Oleg)
  */
 public class ClassificationEstimates {
-    private final List<Integer> testingDataSetNumbers; //Номера директорий с сообщенями, предназначенными для тестировки.
-
-//    public ClassificationEstimates(int testingDataSetNumber) {
-//        this.testingDataSetNumber = testingDataSetNumber;
-//    }
+    /**
+     * Номера директорий с сообщениями, предназначенными для тестировки.
+     */
+    private List<Integer> testingDataSetNumbers;
+    
     public ClassificationEstimates(List<Integer> testingDataSetNumbers) {
         this.testingDataSetNumbers = testingDataSetNumbers;
     }
@@ -25,8 +25,16 @@ public class ClassificationEstimates {
         this.testingDataSetNumbers = new ArrayList<>();
     }
     
+    /**
+     * Добавить номер директории с сообщенями, предназначенными для тестировки.
+     * @param number номер.
+     */
     public void addTestingNumber(int number){
         testingDataSetNumbers.add(number);
+    }
+    
+    public void removeAllTestingNumbers(){
+        testingDataSetNumbers = new ArrayList<>();
     }
     
     /**
@@ -35,7 +43,6 @@ public class ClassificationEstimates {
      */
     private int getRetrievedFilesCount(){
         int cnt = 0;
-        File file = null;
         for(int testingDataSetNumber: testingDataSetNumbers){
             cnt += new File(Main.buildPath(testingDataSetNumber)).list().length;
         }
@@ -85,7 +92,11 @@ public class ClassificationEstimates {
      * @param beta приоритет метрик. Если <code>beta</code> є [0;1], приоритет
      * отдаётся точности. Если <code>beta</code> > 1, приоритет отдаётся полноте.
      * Если же <code>beta</code> = 1, эти две метрики имеют равный приоритет.
-     * @return значение F-меры
+     * @return значение F-меры:
+     * <ol>
+     * <li>для класса SPAM; </li>
+     * <li>для класса HAM.</li>
+     * </ol>
      */
     public List<Double> computeFMeasure(List<Double> estimates, double beta){
         List<Double> measures = new ArrayList<>(2);
@@ -104,6 +115,10 @@ public class ClassificationEstimates {
     private double computeF(double precision, double recall, double beta){
         double powBeta = Math.pow(beta, 2.0);
         return (powBeta + 1) * precision * recall / (powBeta * precision + recall);
+    }
+
+    public List<Integer> getTestingDataSetNumbers() {
+        return testingDataSetNumbers;
     }
     
 }

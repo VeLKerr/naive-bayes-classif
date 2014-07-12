@@ -23,6 +23,10 @@ public class ConnectionProperties {
         private static final int ACQUISITION_ATTEMPTS = 100;
     }
     
+    /**
+     * Провести первоначальную конфигурацию Connection Pool.
+     * @return сконфигурированный Connection Pool.
+     */
     private static BasicDataSource setUpDataSource(){
         BasicDataSource ds = new BasicDataSource();
         ds.setDriverClassName(DRIVER_CLASS);
@@ -75,6 +79,9 @@ public class ConnectionProperties {
         return conn;
     }
     
+    /**
+     * Закрыть Connection Pool.
+     */
     public void closePool() throws SQLException{
 //        cpds.close();
         DATA_SOURCE.close();

@@ -10,8 +10,20 @@ import java.util.Date;
  * @author Kirius VeLKerr (Ivchenko Oleg)
  */
 public class FileNameBuilder {
-    private static final String FNAME_STARTING = "Res_";
     private static final String FNAME_ENDING = ".xls";
+    
+    /**
+     * Получить префикс файла отчёта.
+     * @param isGeneral тип отчёта. Если <code>true</code>, отчёт по исследованию
+     * (K-fold кроссвалидация). Иначе - отчёт по тестированию.
+     * @return префикс.
+     */
+    private static String getFnameStarting(boolean isGeneral){
+        if(isGeneral){
+            return "Gen_";
+        }
+        return "Res_";
+    }
     
     /**
      * Текстовое представление текщих времени и даты.
@@ -23,10 +35,12 @@ public class FileNameBuilder {
     
     /**
      * Построить название файла отчёта.
+     * @param isGeneral тип отчёта. Если <code>true</code>, отчёт по исследованию
+     * (K-fold кроссвалидация). Иначе - отчёт по тестированию.
      * @return строка с названием файла.
      */
-    public static String buildFName(){
-        StringBuilder sb = new StringBuilder(FNAME_STARTING);
+    public static String buildFName(boolean isGeneral){
+        StringBuilder sb = new StringBuilder(getFnameStarting(isGeneral));
         sb.append(setCurrentDate()).append(FNAME_ENDING);
         return sb.toString();
     }
