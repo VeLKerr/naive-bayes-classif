@@ -305,7 +305,7 @@ public class MetricMatrixes {
     /**
      * Получить размер набора данных (кол-во каталогов),
      * анализируемого в режиме исследования.
-     * @return 
+     * @return размер набора данных.
      */
     public int getM(){
         return accuracy.length;

@@ -181,43 +181,91 @@ public class ExcelView {
             header = setHeaderCellsStyle(header);
             
             HSSFSheet workSheet = null;
+            HSSFRow row = null;
+            HSSFCell cell = null;
             for(int i=0; i<SHEET_NAMES.length; i++){
                 workSheet = workbook.createSheet(SHEET_NAMES[i]);
-                HSSFRow row = workSheet.createRow(0);
-                HSSFCell cell = row.createCell(0);
+                row = workSheet.createRow(0);
+                cell = row.createCell(0);
                 cell.setCellStyle(mainHeader);
-                switch(i){
-                    case 0:{
-                        int rowCnt = 0;
-                        cell.setCellValue(SHEET_NAMES[i]);
-                        CellRangeAddress region = new CellRangeAddress(rowCnt, rowCnt, 0, PART_NUMBER - 1);
-                        workSheet.addMergedRegion(region);
-                        rowCnt++;
-                        matrixView(workSheet, mm.getAccuracy(), rowCnt, usual, corner, header);
-                        break;
+                int rowCnt = 0;
+                if(i == 0){
+                    cell.setCellValue(SHEET_NAMES[i]);
+                    CellRangeAddress region = new CellRangeAddress(rowCnt, rowCnt, 0, PART_NUMBER - 1);
+                    workSheet.addMergedRegion(region);
+                    rowCnt++;
+                    matrixView(workSheet, mm.getAccuracy(), rowCnt, usual, corner, header);
+                }
+                else{
+                    cell.setCellValue(SHEET_NAMES[i] + "(" + CLASSES[0] + ")");
+                    CellRangeAddress region = new CellRangeAddress(rowCnt, rowCnt, 0, PART_NUMBER - 1);
+                    workSheet.addMergedRegion(region);
+                    rowCnt++;
+                    matrixView(workSheet, mm.getPrecision(true), rowCnt, usual, corner, header);
+                    rowCnt += PART_NUMBER + 1;
+                    row = workSheet.createRow(rowCnt);
+                    cell = row.createCell(0);
+                    cell.setCellStyle(mainHeader);
+                    cell.setCellValue(SHEET_NAMES[i] + "(" + CLASSES[1] + ")");
+                    region = new CellRangeAddress(rowCnt, rowCnt, 0, PART_NUMBER - 1);
+                    workSheet.addMergedRegion(region);
+                    rowCnt++;
+                    matrixView(workSheet, mm.getPrecision(false), rowCnt, usual, corner, header);
+                }
+            }
+            workSheet = workbook.createSheet("Averages");
+            row = workSheet.createRow(0);
+            for(int i=0; i<SHEET_NAMES.length; i++){
+                if(i == 0){
+                    cell = row.createCell(i);
+                    cell.setCellValue(SHEET_NAMES[i]);
+                }
+                else{
+                    for(int j=0; j<CLASSES.length; j++){
+                        cell = row.createCell(2 * i + j - 1);
+                        cell.setCellValue(SHEET_NAMES[i] + "(" + CLASSES[j] + ")");
                     }
-                    case 1:
-                    case 2:
-                    case 3:{
-                        int rowCnt = 0;
-                        cell.setCellValue(SHEET_NAMES[i] + "(" + CLASSES[0] + ")");
-                        CellRangeAddress region = new CellRangeAddress(rowCnt, rowCnt, 0, PART_NUMBER - 1);
-                        workSheet.addMergedRegion(region);
-                        rowCnt++;
-                        matrixView(workSheet, mm.getPrecision(true), rowCnt, usual, corner, header);
-                        rowCnt += PART_NUMBER + 1;
-                        row = workSheet.createRow(rowCnt);
-                        cell = row.createCell(0);
-                        cell.setCellStyle(mainHeader);
-                        cell.setCellValue(SHEET_NAMES[i] + "(" + CLASSES[1] + ")");
-                        region = new CellRangeAddress(rowCnt, rowCnt, 0, PART_NUMBER - 1);
-                        workSheet.addMergedRegion(region);
-                        rowCnt++;
-                        matrixView(workSheet, mm.getPrecision(false), rowCnt, usual, corner, header);
-                        break;
+                }
+                cell.setCellStyle(corner);
+            }
+            for(int i=0; i<mm.getM() - 1; i++){
+                row = workSheet.createRow(i + 1);
+                for(int j=0; j<SHEET_NAMES.length * CLASSES.length - 1; j++){
+                    cell = row.createCell(i);
+                    cell.setCellStyle(usual);
+                    switch(j){
+                        case 0:{
+                            cell.setCellValue(mm.getAverageAccuracy()[i]);
+                            break;
+                        }
+                        case 1:{
+                            cell.setCellValue(mm.getAveragePrecision(true)[i]);
+                            break;
+                        }
+                        case 2:{
+                            cell.setCellValue(mm.getAveragePrecision(false)[i]);
+                            break;
+                        }
+                        case 3:{
+                            cell.setCellValue(mm.getAverageRecall(true)[i]);
+                            break;
+                        }
+                        case 4:{
+                            cell.setCellValue(mm.getAverageRecall(false)[i]);
+                            break;
+                        }
+                        case 5:{
+                            cell.setCellValue(mm.getAverageFMeasure(true)[i]);
+                            break;
+                        }
+                        case 6:{
+                            cell.setCellValue(mm.getAverageFMeasure(false)[i]);
+                            break;
+                        }
                     }
                 }
             }
+            
             workbook.write(fileOut);
             fileOut.flush();
             fileOut.close();
