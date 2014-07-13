@@ -186,33 +186,38 @@ public class MetricMatrixes {
         fMeasure.get(0)[testingAmt - 1][foldNumber - 1] = measures.get(1);
     }
     
-    private List<Double> getAverage(int meticType){
-        List<Double> averages = new ArrayList<>();
+    /**
+     * Получить массив средних значений.
+     * @param meticType номер метрики.
+     * @return средние значения.
+     */
+    private double[] getAverage(int meticType){
+        double[] averages = new double[accuracy.length];
         switch(meticType){
             case 0:{
-                for(double[] el: accuracy){
-                    averages.add(Utils.average(el));
+                for(int i=0; i<averages.length; i++){
+                    averages[i] = Utils.average(accuracy[i]);
                 }
                 break;
             }
             case 1:
             case 2:{
-                for(double[] el: precision.get(meticType - 1)){
-                    averages.add(Utils.average(el));
+                for(int i=0; i<averages.length; i++){
+                    averages[i] = Utils.average(precision.get(meticType - 1)[i]);
                 }
                 break;
             }
             case 3:
             case 4:{
-                for(double[] el: recall.get(meticType - 3)){
-                    averages.add(Utils.average(el));
+                for(int i=0; i<averages.length; i++){
+                    averages[i] = Utils.average(recall.get(meticType - 3)[i]);
                 }
                 break;
             }
             case 5:
             case 6:{
-                for(double[] el: fMeasure.get(meticType - 5)){
-                    averages.add(Utils.average(el));
+                for(int i=0; i<averages.length; i++){
+                    averages[i] = Utils.average(fMeasure.get(meticType - 5)[i]);
                 }
                 break;
             }
@@ -220,35 +225,96 @@ public class MetricMatrixes {
         return averages;
     }
     
-    public List<Double> getAverageAccuracy(){
+    /**
+     * Средние значения Accuracy.
+     * @return средние значения Accuracy.
+     */
+    public double[] getAverageAccuracy(){
         return getAverage(0);
     }
     
-    public List<Double> getAveragePrecision(boolean isSpam){
+    /**
+     * Средние значения Precision.
+     * @return средние значения Precision.
+     */
+    public double[][] getAveragePrecision(){
+        return new double[][]{
+            getAverage(2),
+            getAverage(1)
+        };
+    }
+    
+    /**
+     * Средние значения Recall.
+     * @return средние значения Recall.
+     */
+    public double[][] getAverageRecall(){
+        return new double[][]{
+            getAverage(4),
+            getAverage(3)
+        };
+    }
+    
+    /**
+     * Средние значения F-меры.
+     * @return средние значения F-меры.
+     */
+    public double[][] getAverageFMeasure(){
+        return new double[][]{
+            getAverage(6),
+            getAverage(5)
+        };
+    }
+    
+    /**
+     * Средние значения Precision.
+     * @param isSpam класс сообщений.
+     * @return средние значения Precision.
+     */
+    public double[] getAveragePrecision(boolean isSpam){
         if(isSpam){
             return getAverage(2);
         }
         return getAverage(1);
     }
     
-    public List<Double> getAverageRecall(boolean isSpam){
+    /**
+     * Средние значения Recall.
+     * @param isSpam класс сообщений.
+     * @return средние значения Recall.
+     */
+    public double[] getAverageRecall(boolean isSpam){
         if(isSpam){
             return getAverage(4);
         }
         return getAverage(3);
     }
     
-    public List<Double> getAverageFMeasure(boolean isSpam){
+    /**
+     * Средние значения F-меры.
+     * @param isSpam класс сообщений.
+     * @return средние значения F-меры.
+     */
+    public double[] getAverageFMeasure(boolean isSpam){
         if(isSpam){
             return getAverage(6);
         }
         return getAverage(5);
     }
     
+    /**
+     * Получить размер набора данных (кол-во каталогов),
+     * анализируемого в режиме исследования.
+     * @return 
+     */
     public int getM(){
         return accuracy.length;
     }
     
+    /**
+     * Получить значение К для K-fold кроссвалидации
+     * @return значение К.
+     */
     public int getK(){
         return accuracy[0].length;
     }

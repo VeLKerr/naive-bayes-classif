@@ -6,7 +6,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 /**
- *
+ * Класс, автоматизирующий разбиение набора данных на обучающую и тестировочную
+ * выборки.
  * @author Kirius VeLKerr (Ivchenko Oleg)
  */
 public class DataSetPartition {
@@ -14,18 +15,19 @@ public class DataSetPartition {
     private final List<Integer> testing;
     private int testingSize;
 
-    public DataSetPartition(int testingSize) {
-        this.testingSize = testingSize;
-        learning = new ArrayList<>();
-        testing = new ArrayList<>();
-        setInitial();
-    }
-
+    /**
+     * Создать разбиение.
+     */
     public DataSetPartition() {
         learning = new ArrayList<>();
         testing = new ArrayList<>();
     }
     
+    /**
+     * Установить разбиение в начальное положение:
+     * |  Learning  |Test.|,
+     * т.е. для тестировочной выборки берутся каталоги с максимальными номерами.
+     */
     private void setInitial(){
         for(int i=0; i<testingSize; i++){
             testing.add(PART_NUMBER - i);
@@ -34,12 +36,20 @@ public class DataSetPartition {
             learning.add(j);
         }
     }
-
+    
+    /**
+     * Установить размер тестировочной выборки.
+     * @param testingSize размер тестировочной выборки.
+     */
     public void setTestingSize(int testingSize) {
         this.testingSize = testingSize;
         setInitial();
     }
     
+    /**
+     * Сделать разбиение для следующего разбиения (см. 
+     * Описание проекта - принцип K-fold кроссвалидации).
+     */
     public void nextExperiment(){
         int max = Collections.max(testing);
         int min = Collections.min(testing);
@@ -65,11 +75,21 @@ public class DataSetPartition {
                 learning.add(learnMin - 1);
             }
     }
-
+    
+    /**
+     * Получить номера каталогов, которые в данном эксперименте выступают в роли
+     * <b>обучающей</b> выборки.
+     * @return 
+     */
     public List<Integer> getLearning() {
         return learning;
     }
-
+    
+    /**
+     * Получить номера каталогов, которые в данном эксперименте выступают в роли
+     * <b>тестировочной</b> выборки.
+     * @return 
+     */
     public List<Integer> getTesting() {
         return testing;
     }

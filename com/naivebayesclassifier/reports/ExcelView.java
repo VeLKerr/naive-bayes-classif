@@ -59,11 +59,21 @@ public class ExcelView {
         }
     }
     
-    public static void generateTestingReport(ClassificationEstimates cest){
-        automaticallyOpenFile(generateTestingRep(cest));
+    /**
+     * Генерация отчёта по режиму тестирования.
+     * @param cest объект для рассчёта метрик.
+     * @param beta коэффициент BETA для рассчёта F-меры.
+     */
+    public static void generateTestingReport(ClassificationEstimates cest, double beta){
+        automaticallyOpenFile(generateTestingRep(cest, beta));
     }
     
-    public static String generateTestingRep(ClassificationEstimates cest){
+    /**
+     * Генерация отчёта по режиму тестирования.
+     * @param cest объект для рассчёта метрик.
+     * @param beta коэффициент BETA для рассчёта F-меры.
+     */
+    private static String generateTestingRep(ClassificationEstimates cest, double beta){
         FileOutputStream fileOut = null;
         String fname = FileNameBuilder.buildFName(false);
         try{
@@ -109,25 +119,32 @@ public class ExcelView {
             
             List<Double> estimates = cest.computeEstimates();
             
-            row = workSheet.createRow(3);
-            cell = row.createCell(0);
-            cell.setCellStyle(preRecHeader);
-            cell.setCellValue(SHEET_NAMES[1]);
-            for(int j=0; j<CLASSES.length; j++){
-                cell = row.createCell(j + 1);
-                cell.setCellStyle(usual);
-                cell.setCellValue(estimates.get(2 * j));
+            for(int i=0; i<2; i++){
+                row = workSheet.createRow(i + 3);
+                cell = row.createCell(0);
+                cell.setCellStyle(preRecHeader);
+                cell.setCellValue(SHEET_NAMES[i + 1]);
+                for(int j=0; j<CLASSES.length; j++){
+                    cell = row.createCell(j + 1);
+                    cell.setCellStyle(usual);
+                    cell.setCellValue(estimates.get(2 * j + i));
+                }
             }
             
-            row = workSheet.createRow(4);
+            List<Double> fMeasures = cest.computeFMeasure(estimates, beta);
+            
+            row = workSheet.createRow(5);
             cell = row.createCell(0);
-            cell.setCellStyle(preRecHeader);
-            cell.setCellValue(SHEET_NAMES[2]);
+            cell.setCellStyle(fMeasureHeader);
+            cell.setCellValue(SHEET_NAMES[3]);
             for(int j=0; j<CLASSES.length; j++){
                 cell = row.createCell(j + 1);
                 cell.setCellStyle(usual);
-                cell.setCellValue(estimates.get(2 * j + 1));
+                cell.setCellValue(fMeasures.get(j));
             }
+            workbook.write(fileOut);
+            fileOut.flush();
+            fileOut.close();
         }
         catch (IOException | SQLException | ClassNotFoundException ex) {
             Logger.getLogger(ExcelView.class.getName()).log(Level.SEVERE, "File not found!", ex);
@@ -136,13 +153,17 @@ public class ExcelView {
     }
     
     /**
-     * Сгенерировать отчёт по результатам исследования.
+     * Сгенерировать отчёт по режиму исследования.
      * @param mm матрицы с метриками.
      */
     public static void generateGeneralReport(MetricMatrixes mm){
         automaticallyOpenFile(generateGeneralRep(mm));
     }
     
+    /**
+     * Сгенерировать отчёт по режиму исследования.
+     * @param mm матрицы с метриками.
+     */
     private static String generateGeneralRep(MetricMatrixes mm){
         FileOutputStream fileOut = null;
         String fname = FileNameBuilder.buildFName(true);
@@ -199,6 +220,7 @@ public class ExcelView {
             }
             workbook.write(fileOut);
             fileOut.flush();
+            fileOut.close();
         } 
         catch (IOException ex) {
             Logger.getLogger(ExcelView.class.getName()).log(Level.SEVERE, "File not found!", ex);
