@@ -25,6 +25,10 @@ import org.jfree.data.xy.XYSeriesCollection;
  */
 public class Curves extends JFrame{
     /**
+     * Размер окна с графиком
+     */
+    private static final int MAX_BOUND = 500;
+    /**
      * Абсциссы. Размер обучающей выборки.
      */
     private static final int[] xData = new int[PART_NUMBER];
@@ -139,6 +143,9 @@ public class Curves extends JFrame{
         xyp.getDomainAxis().setTickLabelFont(font2);
         xyp.getRangeAxis().setTickLabelFont(font2);
         xyp.getDomainAxis().setVerticalTickLabels(true);
+        
+        xyp.getRangeAxis().setAutoRange(false);
+        xyp.getRangeAxis().setRange(0, 1);
 
         //Заполнение и линии.
         XYLineAndShapeRenderer r = (XYLineAndShapeRenderer)plot.getRenderer();
@@ -163,7 +170,7 @@ public class Curves extends JFrame{
     public static void create(int number, double[]... yData){
         Curves frame = new Curves(number, yData);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setBounds(10, 10, 500, 500);
+        frame.setBounds(10, 10, MAX_BOUND, MAX_BOUND);
         frame.setTitle(curveNames[number]);
         frame.setVisible(true);
     }

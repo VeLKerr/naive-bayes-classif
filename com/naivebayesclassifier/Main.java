@@ -1,41 +1,25 @@
 package com.naivebayesclassifier;
 
+import com.naivebayesclassifier.curves.Curves;
+import com.naivebayesclassifier.dao.ClassifiedMessages;
+import com.naivebayesclassifier.dao.GeneralOperations;
+import com.naivebayesclassifier.dao.MessageCounts;
+import com.naivebayesclassifier.dao.Words;
+import com.naivebayesclassifier.reports.ExcelView;
+import com.naivebayesclassifier.reports.MetricMatrixes;
+import com.naivebayesclassifier.test.TestCurves;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.util.List;
-import com.naivebayesclassifier.dao.ClassifiedMessages;
-import com.naivebayesclassifier.dao.GeneralOperations;
-import com.naivebayesclassifier.dao.MessageCounts;
-import com.naivebayesclassifier.dao.Words;
-import com.naivebayesclassifier.curves.Curves;
-import com.naivebayesclassifier.reports.ExcelView;
-import com.naivebayesclassifier.reports.MetricMatrixes;
 
 /**
  * <b><font color="red">Главный класс программы</font></b>
  * @author VeLKerr
  */
 public class Main {
-//    private static abstract class TestCurves{
-//        private static final double[] accuracy = {
-//            
-//        };
-//        private static final double[][] precision = {
-//            {},
-//            {}
-//        };
-//        private static final double[][] recall = {
-//            {},
-//            {}
-//        };
-//        private static final double[][] fMeasure = {
-//            {},
-//            {}
-//        };
-//    }
     //кол-во папок с сообщениями (в полном наборе данных)
     public static final int PART_NUMBER = getPartNumber();
     
