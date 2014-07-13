@@ -28,18 +28,6 @@ public class ParameterQueryBuilder {
         private static final String ENDING = "amcnt + 1 where text = ?";
     }
     
-//    private static abstract class Updating{
-//        private static final String STARTING = "update words\n" +
-//            "set ";
-//        private static final String MIDDLE_PART = "amcnt = 1 + (\n" +
-//            "  select ";
-//        private static final String ENDING = "amcnt\n" +
-//            "  from words\n" +
-//            "  where text like ?\n" +
-//            ")\n" +
-//            "where text like ?";
-//    }
-    
     /**
      * Если <code>true</code>, построение запросов будет производится для
      * класса SPAM. Иначе - для HAM.

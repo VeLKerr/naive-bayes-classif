@@ -10,6 +10,7 @@ import com.naivebayesclassifier.dao.ClassifiedMessages;
 import com.naivebayesclassifier.dao.GeneralOperations;
 import com.naivebayesclassifier.dao.MessageCounts;
 import com.naivebayesclassifier.dao.Words;
+import com.naivebayesclassifier.curves.Curves;
 import com.naivebayesclassifier.reports.ExcelView;
 import com.naivebayesclassifier.reports.MetricMatrixes;
 
@@ -18,8 +19,25 @@ import com.naivebayesclassifier.reports.MetricMatrixes;
  * @author VeLKerr
  */
 public class Main {
+//    private static abstract class TestCurves{
+//        private static final double[] accuracy = {
+//            
+//        };
+//        private static final double[][] precision = {
+//            {},
+//            {}
+//        };
+//        private static final double[][] recall = {
+//            {},
+//            {}
+//        };
+//        private static final double[][] fMeasure = {
+//            {},
+//            {}
+//        };
+//    }
     //кол-во папок с сообщениями (в полном наборе данных)
-    public static final int PART_NUMBER = 4;
+    public static final int PART_NUMBER = getPartNumber();
     
     //путь к папкам с сообщениями (bare в данном наборе можно изметить на
     //lemm, stop или lemm_stop.
@@ -55,8 +73,17 @@ public class Main {
             return null;
         }
     }
-        
-    private static void testingOneFolder(ClassificationEstimates cest, int testingDataSetNumber)throws ClassNotFoundException, SQLException, IOException{
+    
+    /**
+     * Провести тестирование одного каталога.
+     * @param cest объект для рассчёта метрик.
+     * @param testingDataSetNumber номер анализируемого каталога.
+     * @throws ClassNotFoundException
+     * @throws SQLException
+     * @throws IOException 
+     */
+    private static void testingOneFolder(ClassificationEstimates cest, int testingDataSetNumber)
+            throws ClassNotFoundException, SQLException, IOException{
         File dir = new File(buildPath(testingDataSetNumber));
         cest.addTestingNumber(testingDataSetNumber);
         for(String fname: dir.list()){
@@ -68,43 +95,6 @@ public class Main {
             Words.addAll(words, nb.getUniqueWords(), isSpam);//после классификации системой сообщения,
             //происходит её дообучение на нём.
         }
-    }
-    
-    private static void testing() throws ClassNotFoundException, SQLException, IOException{
-        MessageCounts.createMessageTypes();
-        TextPreprocessing tp = new TextPreprocessing();
-        MetricMatrixes mm = new MetricMatrixes(PART_NUMBER, PART_NUMBER);
-        ClassificationEstimates cest = new ClassificationEstimates();
-        
-//        tp.addLearningNumber(1);
-//        tp.writeToDB();
-        for(int i=1; i<PART_NUMBER; i++){
-            tp.addLearningNumber(i);
-            tp.writeToDB(i);
-//            if(i != 1){
-//                tp.addLearningNumber(i);
-//            }
-            for(int j=1; j<PART_NUMBER; j++){
-                if(!tp.getLearningNumbers().contains(j)){
-                    File dir = new File(buildPath(j));
-                    cest.addTestingNumber(j);
-                    for(String fname: dir.list()){
-                        List<String> words = TextPreprocessing.prepareToClassifyFile(dir, fname);
-                        NaiveBayes nb = new NaiveBayes(words);
-                        boolean isSpam = nb.isSpam();
-                        System.err.println("Tested " + fname + " (" + j + ")");
-                        ClassifiedMessages.add(fname, isSpam);
-                        Words.addAll(words, nb.getUniqueWords(), isSpam);//после классификации системой сообщения,
-                        //происходит её дообучение на нём.
-                    }
-                    List<Double> list = cest.computeEstimates();
-                    System.out.println("+++" + list.get(0) + " " + list.get(1));
-                    mm.setAllMetrics(cest, i, j);
-                }
-            }
-            GeneralOperations.deleteAll("CLASSIFIEDMESSAGES");
-        }
-        ExcelView.generateGeneralReport(mm);
     }
     
     /**
@@ -135,10 +125,17 @@ public class Main {
                 dsp.nextExperiment();
             }
         }
-        
         ExcelView.generateGeneralReport(mm);
+        Curves.create(0, mm.getAverageAccuracy());
+        Curves.create(1, mm.getAveragePrecision());
+        Curves.create(2, mm.getAverageRecall());
+        Curves.create(3, mm.getAverageFMeasure());
     }
     
+    /**
+     * Вывести текстовое меню.
+     * @param mode режим работы системы.
+     */
     private static void outputMenu(int mode){
         String str = "Input numbers of folders for ";
         if(mode == 1){
@@ -175,15 +172,7 @@ public class Main {
                 }
                 System.out.print("Input BETA for computing F-measures: ");
                 double beta = Utils.inputDouble(br, 0.0, Double.MAX_VALUE);
-                System.out.println("Accuracy = " + cest.computeAccuracy());
-                List<Double> estimates = cest.computeEstimates();
-                System.out.println("Pricision(Spam) = " + estimates.get(0));
-                System.out.println("Pricision(Ham) = " + estimates.get(2));
-                System.out.println("Recall(Spam) = " + estimates.get(1));
-                System.out.println("Recall(Ham) = " + estimates.get(3));
-                List<Double> fMeasures = cest.computeFMeasure(estimates, beta);
-                System.out.println("F-measure(Spam) = " + fMeasures.get(0));
-                System.out.println("F-measure(Ham) = " + fMeasures.get(1));
+                ExcelView.generateTestingReport(cest, beta);
                 break;
             }
             case 3:{

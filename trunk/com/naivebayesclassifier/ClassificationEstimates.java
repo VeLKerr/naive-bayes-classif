@@ -116,7 +116,12 @@ public class ClassificationEstimates {
         double powBeta = Math.pow(beta, 2.0);
         return (powBeta + 1) * precision * recall / (powBeta * precision + recall);
     }
-
+    
+    /**
+     * Получить номера анализируемых каталогов, для которых расчитываются
+     * метрики.
+     * @return номера каталогов.
+     */
     public List<Integer> getTestingDataSetNumbers() {
         return testingDataSetNumbers;
     }
