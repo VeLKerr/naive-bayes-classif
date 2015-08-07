@@ -1,0 +1,1 @@
+The application, which used for spam-filtering. The application written on Java language.
