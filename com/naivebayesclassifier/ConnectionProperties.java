@@ -11,8 +11,8 @@ import org.apache.commons.dbcp.BasicDataSource;
 public class ConnectionProperties {
     public static final String DRIVER_URL = "jdbc:oracle:thin:@VeLKerr-PC:1521:XE";
     public static final String DRIVER_CLASS = "oracle.jdbc.driver.OracleDriver";
-    public static final String US_PASS = "karina18";
-    public static final String US_NAME = "VeLKerr";
+    public static final String US_PASS = "PASSWORD";
+    public static final String US_NAME = "LOGIN";
     private static final BasicDataSource DATA_SOURCE = setUpDataSource();
     
     /**
